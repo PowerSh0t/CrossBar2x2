@@ -1,0 +1,115 @@
+m255
+K4
+z2
+!s11f vlog 2020.1 2020.02, Feb 28 2020
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 dD:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar
+vControl
+Z1 DXx6 sv_std 3 std 0 22 VYECXdT12H8WgbUP_5Y6:3
+Z2 !s110 1610686352
+!i10b 1
+!s100 O[O?_59HW9F17jc8^:N[J1
+Z3 !s11b Dg1SIo80bB@j0V0VzS_@n1
+IPcVjX>@`jR?GSh5<_CFQ20
+Z4 VDg1SIo80bB@j0V0VzS_@n1
+S1
+R0
+w1610685915
+8D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Control.sv
+FD:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Control.sv
+!i122 296
+L0 1 107
+Z5 OV;L;2020.1;71
+r1
+!s85 0
+31
+Z6 !s108 1610686352.000000
+!s107 D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Control.sv|
+!s90 -reportprogress|300|-work|work|D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Control.sv|
+!i113 1
+Z7 o-work work
+Z8 tCvgOpt 0
+n@control
+vCrossBar
+R1
+R2
+!i10b 1
+!s100 6TS]8Q]?N8dJ5:0BCUfbJ3
+R3
+IOFDejQijCzgDGWdmla?RA2
+R4
+S1
+R0
+w1610685710
+8D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/CrossBar.sv
+FD:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/CrossBar.sv
+!i122 297
+L0 1 25
+R5
+r1
+!s85 0
+31
+R6
+!s107 D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/CrossBar.sv|
+!s90 -reportprogress|300|-work|work|D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/CrossBar.sv|
+!i113 1
+R7
+R8
+n@cross@bar
+vMultiplex
+R1
+R2
+!i10b 1
+!s100 <lKf@P0NfaAQmI`E_o<890
+R3
+IaL`aGMg4L5`4SZ;DX@WT?0
+R4
+S1
+R0
+w1610684914
+8D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Multiplex.sv
+FD:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Multiplex.sv
+!i122 298
+L0 1 55
+R5
+r1
+!s85 0
+31
+R6
+!s107 D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Multiplex.sv|
+!s90 -reportprogress|300|-work|work|D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Multiplex.sv|
+!i113 1
+R7
+R8
+n@multiplex
+vTest_CrossBar
+R1
+!s110 1610686353
+!i10b 1
+!s100 VHk=_g8c=8cH6iGol=9E:2
+R3
+I9mNdeOW0OUT`7Dg6c3M:j2
+R4
+S1
+R0
+w1610686323
+8D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Test_CrossBar.sv
+FD:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Test_CrossBar.sv
+!i122 299
+L0 2 283
+R5
+r1
+!s85 0
+31
+!s108 1610686353.000000
+!s107 D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Test_CrossBar.sv|
+!s90 -reportprogress|300|-work|work|D:/Personal data 2/Coding practic/Quartus/Tests/TestCrossBar/Test_CrossBar.sv|
+!i113 1
+R7
+R8
+n@test_@cross@bar

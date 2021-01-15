@@ -1,0 +1,42 @@
+module Multiplex
+#(parameter M = 32)
+
+(inout [M-1:0]m0rw, m1rw, s0rw, s1rw,
+output [M-1:0]s0addr, s1addr,
+input [M-1:0]m0addr, m1addr,
+input	clk, reset, muxs0addr, muxs1addr, muxs0, muxs1, muxm0, muxm1, tris0, tris1, s0cmd, s1cmd);
+
+logic [M-1:0]wbusm0, wbusm1, wbuss0, wbuss1, busm0, busm1, buss0, buss1;
+logic [M-1:0] m0data, m1data;
+
+
+always_ff @(posedge clk or posedge reset)
+if(reset)
+	m0data <= 'b0;
+else if(s0cmd)
+	m0data <= wbusm0;
+	
+always_ff @(posedge clk or posedge reset)
+if(reset)
+	m1data <= 'b0;
+else if(s1cmd)
+	m1data <= wbusm1;	
+	
+assign s0addr = (muxs0addr) ? m1addr : m0addr;
+assign s1addr = (muxs1addr) ? m1addr : m0addr;
+assign buss0 = (muxs0) ? m1data : m0data;
+assign buss1 = (muxs1) ? m1data : m0data;
+assign busm0 = (muxm0) ? wbuss1 : wbuss0;
+assign busm1 = (muxm1) ? wbuss1 : wbuss0;
+
+
+assign s0rw = (tris0) ? buss0 : 'bZ;
+assign s1rw = (tris1) ? buss1 : 'bZ;
+assign m0rw = (!s0cmd) ? busm0 : 'bZ;
+assign m1rw = (!s1cmd) ? busm1 : 'bZ;
+assign wbusm0 = m0rw;
+assign wbusm1 = m1rw;
+assign wbuss0 = s0rw;
+assign wbuss1 = s1rw;
+
+endmodule

@@ -1,0 +1,12 @@
+
+State Machine - |CrossBar|Control:Cntrl2|state
+Name state.waitreq state.wr state.waitack 
+state.waitreq 0 0 0 
+state.waitack 1 0 1 
+state.wr 1 1 0 
+
+State Machine - |CrossBar|Control:Cntrl1|state
+Name state.waitreq state.wr state.waitack 
+state.waitreq 0 0 0 
+state.waitack 1 0 1 
+state.wr 1 1 0 

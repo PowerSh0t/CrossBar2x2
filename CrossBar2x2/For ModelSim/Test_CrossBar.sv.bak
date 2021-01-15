@@ -1,0 +1,286 @@
+`timescale 1ns/1ns
+module Tests_BS3;
+
+typedef struct packed {			// Тип данных для памяти, в которую будут загружатся вектора
+	logic 			m0req,
+					m1req,
+					m0cmd,
+					m1cmd,
+					m0slv,
+					m1slv;
+}command;
+
+logic m0req, m1req, m0cmd, m1cmd, s0ack, s1ack, clk, reset, s0req, s1req, s0cmd, 
+		s1cmd, m0ack, m1ack;
+logic 	[31:0]m0addr, m1addr, s0addr, s1addr, m0w, m1w, s0w, s1w, m0r, m1r, s0r, s1r, bufm0, bufm1;
+tri 		[31:0] m0rw, m1rw, s0rw, s1rw;
+bit trim0 = 1'b0, trim1 = 1'b0, tris0 = 1'b0, tris1 = 1'b0;
+
+int error = 0; // Счётчик ошибок
+
+enum bit {prtm0, prtm1} prts0 = prtm0, prts1 = prtm0; // Переменные, запоминающие приоритет
+
+localparam lenStimel = 31; // Количество стимулов
+
+command memStimul[0:lenStimel];
+logic [31:0]memSlave[0:15];
+
+
+
+CrossBar DUTTEST(	m0rw, m1rw, s0rw, s1rw, s0addr, s1addr, s0req, s1req, s0cmd, s1cmd, m0ack, 
+						m1ack, m0addr, m1addr, m0req, m1req, m0cmd, m1cmd, s0ack, s1ack, clk, reset);
+
+//*******************************************************
+
+task genMemSlave();
+	for (int i=0; i<16; ++i)
+		memSlave[i] <= $urandom;	
+endtask
+
+
+task genStimul(int i);  // Процедура генерации всех нужных стимулов
+	@(negedge clk);
+	m0req <= memStimul[i].m0req; m1req <= memStimul[i].m1req; m0cmd <= memStimul[i].m0cmd; m1cmd <= memStimul[i].m1cmd;
+	m0addr[31] <= memStimul[i].m0slv; m1addr[31] <= memStimul[i].m1slv; m0addr[30:28] <= $urandom_range(7,0); m1addr[30:28] <= $urandom_range(7,0);
+	trim0 <= memStimul[i].m0cmd;;
+	trim1 <= memStimul[i].m1cmd;;
+	if(memStimul[i].m0req && memStimul[i].m0cmd)
+		m0w <= $urandom;
+	if(memStimul[i].m1req && memStimul[i].m1cmd)
+		m1w <= $urandom;
+endtask
+
+task checkWork(int i);  // Процедура, проверяющая работу и фиксирующая кол-во ошибок
+	if(m0req && m1req) begin
+		if(!m0addr[31] && !m1addr[31])
+			if(prts0 == prtm0) begin
+				@(posedge m0ack or posedge m1ack);
+				#1;
+				if(m0ack && !m1ack) begin
+					if((m0w == memSlave[m0addr[31:28]]) && !m0cmd || (bufm0 == memSlave[m0addr[31:28]]) && m0cmd)
+						$display("Nice transaction");
+					else begin
+						++error;
+						$display("Failed transaction, %p", memStimul[i]);
+					end
+					prts0 <= prtm1;
+					@(negedge clk);
+					m0req <= 1'b0;
+					checkWork(i);
+				end
+				else begin
+					++error;
+					$display("Failed priority, %p", memStimul[i]);
+				end
+			end
+			else begin
+				@(posedge m0ack or posedge m1ack);
+				#1;
+				if(!m0ack && m1ack) begin
+					if((m1w == memSlave[m1addr[31:28]]) && !m1cmd || (bufm1 == memSlave[m1addr[31:28]]) && m1cmd)
+						$display("Nice transaction");
+						
+					else begin
+						++error;
+						$display("Failed transaction, %p", memStimul[i]);
+					end
+					prts0 <= prtm0;
+					@(negedge clk);
+					m1req <= 1'b0;
+					checkWork(i);
+				end
+				else begin
+					++error;
+					$display("Failed priority, %p", memStimul[i]);
+				end
+			end
+		else if(!m0addr[31] && m1addr[31]) begin
+			fork
+				@(posedge m0ack);
+				@(posedge m1ack);
+			join
+			#1;
+			if (((m0w == memSlave[m0addr[31:28]]) && !m0cmd || (bufm0 == memSlave[m0addr[31:28]])) && m0cmd && ((m1w == memSlave[m1addr[31:28]]) && !m1cmd || (bufm1 == memSlave[m1addr[31:28]]) && m1cmd))
+				$display("Nice transaction");
+			else begin
+				++error;
+				$display("Failed transaction, %p", memStimul[i]);
+			end
+		end
+		else if (m0addr[31] && !m1addr[31]) begin
+			fork
+				@(posedge m0ack);
+				@(posedge m1ack);
+			join
+			#1;
+			if (((m0w == memSlave[m0addr[31:28]]) && !m0cmd || (bufm0 == memSlave[m0addr[31:28]]) && m0cmd) && ((m1w == memSlave[m1addr[31:28]]) && !m1cmd || (bufm1 == memSlave[m1addr[31:28]]) && m1cmd))
+				$display("Nice transaction");
+			else begin
+				++error;
+				$display("Failed transaction, %p", memStimul[i]);
+			end
+		end
+		else
+			if(prts1 == prtm0) begin
+				@(posedge m0ack or posedge m1ack);
+				#1;
+				if (m0ack && !m1ack) begin
+					if((m0w == memSlave[m0addr[31:28]]) && !m0cmd || (bufm0 == memSlave[m0addr[31:28]]) && m0cmd)
+						$display("Nice transaction");
+					else begin
+						++error;
+						$display("Failed transaction, %p", memStimul[i]);
+					end
+					prts1 <= prtm1;
+					@(negedge clk);
+					m0req <= 1'b0;
+					checkWork(i);
+				end
+				else begin
+					++error;
+					$display("Failed priority, %p", memStimul[i]);
+				end
+			end
+			else begin
+				@(posedge m0ack or posedge m1ack);
+				#1;
+				if (!m0ack && m1ack) begin
+					if((m1w == memSlave[m1addr[31:28]]) && !m0cmd || (bufm1 == memSlave[m1addr[31:28]]) && m1cmd)
+						$display("Nice transaction");
+						
+					else begin
+						++error;
+						$display("Failed transaction, %p", memStimul[i]);
+					end
+					prts1 <= prtm0;
+					@(negedge clk);
+					m1req <= 1'b0;
+					checkWork(i);
+				end
+				else begin
+					++error;
+					$display("Failed priority, %p", memStimul[i]);
+				end
+			end
+	end
+	else if (!m0req && m1req) begin
+		@(posedge m1ack);
+		#1;
+		if ((m1w == memSlave[m1addr[31:28]]) && !m1cmd || (bufm1 == memSlave[m1addr[31:28]]) && m1cmd)
+			$display("Nice transaction");
+		else begin
+			++error;
+			$display("Failed transaction, %p", memStimul[i]);
+		end
+		if(m1addr[31])
+			prts1 <= prtm0;
+		else
+			prts0 <= prtm0;
+		@(negedge clk);
+		m1req <= 1'b0;
+	end
+	else if (m0req && !m1req) begin
+		@(posedge m0ack);
+		#1;
+		if ((m0w == memSlave[m0addr[31:28]]) && !m0cmd || (bufm0 == memSlave[m0addr[31:28]]) && m0cmd)
+			$display("Nice transaction");
+		else begin
+			++error;
+			$display("Failed transaction, %p", memStimul[i]);
+		end
+		if(m0addr[31])
+			prts1 <= prtm1;
+		else
+			prts0 <= prtm1;
+		@(negedge clk);
+		m0req <= 1'b0;
+	end
+endtask
+
+
+//*******************************************************
+
+assign m0rw = (trim0) ? m0w : 'bz;
+assign m1rw = (trim1) ? m1w : 'bz;
+assign s0rw = (tris0) ? s0w : 'bz;
+assign s1rw = (tris1) ? s1w : 'bz;
+assign m0r = m0rw;
+assign m1r = m1rw;
+assign s0r = s0rw;
+assign s1r = s1rw;
+assign bufm0 = m0r;
+assign bufm1 = m1r;
+
+
+//*******************************************************
+
+initial begin
+	clk = 0;
+	forever 	#5 clk = ~clk;
+end
+
+//*******************************************************
+
+initial begin
+	reset = 0;
+end
+
+//*******************************************************
+
+initial begin
+	$readmemb("vectors.txt", memStimul); 
+	genMemSlave();
+	#1;
+	for (int i = 0; i < lenStimel; ++i) begin
+		genStimul(i);
+		checkWork(i);
+	end
+	@display("Error = %d", error);
+end
+
+//*******************************************************
+
+
+always @(posedge clk) // Иммитация ответной реакции нулевого слейва на запрос
+	if(s0req)
+	begin
+		@(negedge clk);
+		if(s0cmd)
+			memSlave[s0addr[31:28]] <= s0r;
+		else
+		begin
+			tris0 <= 1'b1;
+			s0w <= memSlave[s0addr[31:28]];
+		end
+		s0ack <= 1'b1;
+		@(negedge clk);
+		s0ack <= 1'b0;
+		tris0 <= 1'b0;
+	end
+	else
+		s0ack <= 1'b0;
+
+//*******************************************************
+
+always @(posedge clk) // Иммитация ответной реакции первого слейва на запрос
+	if(s1req)
+	begin
+		@(negedge clk);
+		if(s1cmd)
+			memSlave[s1addr[31:28]] <= s1r;
+		else
+		begin
+			tris1 <= 1'b1;
+			s1w <= memSlave[s1addr[31:28]];
+		end
+		s1ack <= 1'b1;
+		@(negedge clk);
+		s1ack <= 1'b0;
+		tris1 <= 1'b0;
+	end
+	else
+		s1ack <= 1'b0;
+
+//*******************************************************
+
+endmodule
